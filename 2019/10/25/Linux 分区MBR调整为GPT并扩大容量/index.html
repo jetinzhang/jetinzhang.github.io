@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>linux 分区mbr调整为gpt，并扩大容量 | Jetinzhang Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="Linuxgdisk分区扩容" />
+  
+  
+  
+  
+  <meta name="description" content="Linux 分区MBR调整为GPT，并扩大容量==注意: 涉及到重要数据，请先备份！！！！！！== 1. 说明具备知识：fdisk gdisk基础使用方法 使用工具：gdisk ==注意: 不要使用fdisk调整GPT分区，也不要使用gdisk去调整MBR分区，但转换除外。== 之前看有些文章使用parted来调整分区也是可以的，但不建议，因为parted执行完命令是立即生效的，建议还是使用gdi">
+<meta name="keywords" content="Linux,gdisk,分区,扩容">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 分区MBR调整为GPT，并扩大容量">
+<meta property="og:url" content="https:&#x2F;&#x2F;jetinzhang.github.io&#x2F;2019&#x2F;10&#x2F;25&#x2F;Linux%20%E5%88%86%E5%8C%BAMBR%E8%B0%83%E6%95%B4%E4%B8%BAGPT%E5%B9%B6%E6%89%A9%E5%A4%A7%E5%AE%B9%E9%87%8F&#x2F;index.html">
+<meta property="og:site_name" content="Jetinzhang Blog">
+<meta property="og:description" content="Linux 分区MBR调整为GPT，并扩大容量==注意: 涉及到重要数据，请先备份！！！！！！== 1. 说明具备知识：fdisk gdisk基础使用方法 使用工具：gdisk ==注意: 不要使用fdisk调整GPT分区，也不要使用gdisk去调整MBR分区，但转换除外。== 之前看有些文章使用parted来调整分区也是可以的，但不建议，因为parted执行完命令是立即生效的，建议还是使用gdi">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-29T14:19:03.146Z">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Jetinzhang Blog" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="border-width: 0;">
+                <p>Jetinzhang Blog</p>
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-Linux 分区MBR调整为GPT并扩大容量" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      Linux 分区MBR调整为GPT，并扩大容量
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2019/10/25/Linux%20%E5%88%86%E5%8C%BAMBR%E8%B0%83%E6%95%B4%E4%B8%BAGPT%E5%B9%B6%E6%89%A9%E5%A4%A7%E5%AE%B9%E9%87%8F/" class="article-date">
+	  <time datetime="2019-10-25T11:01:03.000Z" itemprop="datePublished">2019-10-25</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+
+      
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Linux-分区MBR调整为GPT，并扩大容量"><a href="#Linux-分区MBR调整为GPT，并扩大容量" class="headerlink" title="Linux 分区MBR调整为GPT，并扩大容量"></a>Linux 分区MBR调整为GPT，并扩大容量</h1><p>==注意: 涉及到重要数据，请先备份！！！！！！==</p>
+<h2 id="1-说明"><a href="#1-说明" class="headerlink" title="1. 说明"></a>1. 说明</h2><p>具备知识：fdisk gdisk基础使用方法</p>
+<p>使用工具：gdisk</p>
+<p>==注意: 不要使用fdisk调整GPT分区，也不要使用gdisk去调整MBR分区，但转换除外。==</p>
+<p>之前看有些文章使用parted来调整分区也是可以的，但不建议，因为parted执行完命令是立即生效的，建议还是使用gdisk 类似fdisk操作，不保存不生效。</p>
+<h2 id="2-安装工具"><a href="#2-安装工具" class="headerlink" title="2. 安装工具"></a>2. 安装工具</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Debian</span></span><br><span class="line">apt-get install gdisk</span><br><span class="line"></span><br><span class="line"><span class="comment"># Centos</span></span><br><span class="line">yum install gdisk</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-卸载硬盘挂载的目录"><a href="#3-卸载硬盘挂载的目录" class="headerlink" title="3. 卸载硬盘挂载的目录"></a>3. 卸载硬盘挂载的目录</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">umount /data</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-判断硬盘类型"><a href="#4-判断硬盘类型" class="headerlink" title="4. 判断硬盘类型"></a>4. 判断硬盘类型</h2><p>使用如下命令： </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@minio-c1-node2:~<span class="comment"># fdisk -l /dev/sdb</span></span><br><span class="line">Disk /dev/sdb: 5 TiB, 5497558138880 bytes, 10737418240 sectors</span><br><span class="line">Disk model: Virtual disk    </span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 512 bytes</span><br><span class="line">I/O size (minimum/optimal): 512 bytes / 512 bytes</span><br><span class="line">Disklabel <span class="built_in">type</span>: gpt</span><br><span class="line">Disk identifier: BEAA23E5-F7C0-4CB4-9A45-5666024DDAE3</span><br><span class="line"></span><br><span class="line">Device     Start         End     Sectors Size Type</span><br><span class="line">/dev/sdb1   2048 10737418206 10737416159   5T Linux filesystem</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">-----------------</span><br><span class="line"></span><br><span class="line"><span class="comment"># GPT类型</span></span><br><span class="line">Disklabel <span class="built_in">type</span>: gpt </span><br><span class="line"></span><br><span class="line"><span class="comment"># MBR类型</span></span><br><span class="line">Disklabel <span class="built_in">type</span>: dos</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-MBR转换为GPT并扩容"><a href="#5-MBR转换为GPT并扩容" class="headerlink" title="5. MBR转换为GPT并扩容"></a>5. MBR转换为GPT并扩容</h2><p>如果只是想转换为gpt的话 gdisk /dev/sdb 然后在gdisk命令行输入w 保存一下就实现了mbr转换为gpt了。</p>
+<p>如果还要继续扩大容量使用gdisk删除原来分区，重新建分区也能进行转换并扩大容量。</p>
+<p>==注意：原来Start (sector) 是多少，First sector就填多少，这样才能保证文件不丢失==</p>
+<h3 id="5-1-转换为gpt"><a href="#5-1-转换为gpt" class="headerlink" title="5.1. 转换为gpt"></a>5.1. 转换为gpt</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">root@minio-c1-node4:~<span class="comment"># gdisk /dev/sdb</span></span><br><span class="line">GPT fdisk (gdisk) version 1.0.3</span><br><span class="line"></span><br><span class="line">Partition table scan:</span><br><span class="line">  MBR: protective</span><br><span class="line">  BSD: not present</span><br><span class="line">  APM: not present</span><br><span class="line">  GPT: present</span><br><span class="line"></span><br><span class="line">Found valid GPT with protective MBR; using GPT.</span><br><span class="line"></span><br><span class="line">Command (? <span class="keyword">for</span> <span class="built_in">help</span>): p</span><br><span class="line">Disk /dev/sdb: 10737418240 sectors, 5.0 TiB</span><br><span class="line">Model: Virtual disk    </span><br><span class="line">Sector size (logical/physical): 512/512 bytes</span><br><span class="line">Disk identifier (GUID): 6BC2B78A-FD8D-4103-803C-2628F7C4C765</span><br><span class="line">Partition table holds up to 128 entries</span><br><span class="line">Main partition table begins at sector 2 and ends at sector 33</span><br><span class="line">First usable sector is 34, last usable sector is 10737418206</span><br><span class="line">Partitions will be aligned on 2048-sector boundaries</span><br><span class="line">Total free space is 8589936573 sectors (4.0 TiB)</span><br><span class="line"></span><br><span class="line">Number  Start (sector)    End (sector)  Size       Code  Name</span><br><span class="line">   1            2048      2147483647   1024.0 GiB  8300  Linux filesystem</span><br><span class="line"></span><br><span class="line">Command (? <span class="keyword">for</span> <span class="built_in">help</span>): d</span><br><span class="line">Using 1</span><br><span class="line"></span><br><span class="line">Command (? <span class="keyword">for</span> <span class="built_in">help</span>): n</span><br><span class="line">Partition number (1-128, default 1): </span><br><span class="line">First sector (34-10737418206, default = 2048) or &#123;+-&#125;size&#123;KMGTP&#125;: </span><br><span class="line">Last sector (2048-10737418206, default = 10737418206) or &#123;+-&#125;size&#123;KMGTP&#125;: </span><br><span class="line">Current <span class="built_in">type</span> is <span class="string">'Linux filesystem'</span></span><br><span class="line">Hex code or GUID (L to show codes, Enter = 8300): </span><br><span class="line">Changed <span class="built_in">type</span> of partition to <span class="string">'Linux filesystem'</span></span><br><span class="line"></span><br><span class="line">Command (? <span class="keyword">for</span> <span class="built_in">help</span>): p</span><br><span class="line">Disk /dev/sdb: 10737418240 sectors, 5.0 TiB</span><br><span class="line">Model: Virtual disk    </span><br><span class="line">Sector size (logical/physical): 512/512 bytes</span><br><span class="line">Disk identifier (GUID): 6BC2B78A-FD8D-4103-803C-2628F7C4C765</span><br><span class="line">Partition table holds up to 128 entries</span><br><span class="line">Main partition table begins at sector 2 and ends at sector 33</span><br><span class="line">First usable sector is 34, last usable sector is 10737418206</span><br><span class="line">Partitions will be aligned on 2048-sector boundaries</span><br><span class="line">Total free space is 2014 sectors (1007.0 KiB)</span><br><span class="line"></span><br><span class="line">Number  Start (sector)    End (sector)  Size       Code  Name</span><br><span class="line">   1            2048     10737418206   5.0 TiB     8300  Linux filesystem</span><br><span class="line"></span><br><span class="line">Command (? <span class="keyword">for</span> <span class="built_in">help</span>): w</span><br><span class="line"></span><br><span class="line">Final checks complete. About to write GPT data. THIS WILL OVERWRITE EXISTING</span><br><span class="line">PARTITIONS!!</span><br><span class="line"></span><br><span class="line">Do you want to proceed? (Y/N): Y</span><br><span class="line">OK; writing new GUID partition table (GPT) to /dev/sdb.</span><br><span class="line">Warning: The kernel is still using the old partition table.</span><br><span class="line">The new table will be used at the next reboot or after you</span><br><span class="line">run partprobe(8) or kpartx(8)</span><br><span class="line">The operation has completed successfully.</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-调整分区大小"><a href="#5-2-调整分区大小" class="headerlink" title="5.2. 调整分区大小"></a>5.2. 调整分区大小</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">root@minio-c1-node3:~<span class="comment"># gdisk /dev/sdb</span></span><br><span class="line">GPT fdisk (gdisk) version 1.0.3</span><br><span class="line"></span><br><span class="line">Partition table scan:</span><br><span class="line">  MBR: MBR only</span><br><span class="line">  BSD: not present</span><br><span class="line">  APM: not present</span><br><span class="line">  GPT: not present</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">***************************************************************</span><br><span class="line">Found invalid GPT and valid MBR; converting MBR to GPT format</span><br><span class="line"><span class="keyword">in</span> memory. THIS OPERATION IS POTENTIALLY DESTRUCTIVE! Exit by</span><br><span class="line">typing <span class="string">'q'</span> <span class="keyword">if</span> you don<span class="string">'t want to convert your MBR partitions</span></span><br><span class="line"><span class="string">to GPT format!</span></span><br><span class="line"><span class="string">***************************************************************</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Command (? for help): p</span></span><br><span class="line"><span class="string">Disk /dev/sdb: 10737418240 sectors, 5.0 TiB</span></span><br><span class="line"><span class="string">Model: Virtual disk    </span></span><br><span class="line"><span class="string">Sector size (logical/physical): 512/512 bytes</span></span><br><span class="line"><span class="string">Disk identifier (GUID): 17A7407E-8FD7-474F-84F4-5278551BBAE7</span></span><br><span class="line"><span class="string">Partition table holds up to 128 entries</span></span><br><span class="line"><span class="string">Main partition table begins at sector 2 and ends at sector 33</span></span><br><span class="line"><span class="string">First usable sector is 34, last usable sector is 10737418206</span></span><br><span class="line"><span class="string">Partitions will be aligned on 2048-sector boundaries</span></span><br><span class="line"><span class="string">Total free space is 8589936573 sectors (4.0 TiB)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Number  Start (sector)    End (sector)  Size       Code  Name</span></span><br><span class="line"><span class="string">   1            2048      2147483647   1024.0 GiB  8300  Linux filesystem</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Command (? for help): d</span></span><br><span class="line"><span class="string">Using 1</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Command (? for help): n</span></span><br><span class="line"><span class="string">Partition number (1-128, default 1): </span></span><br><span class="line"><span class="string">First sector (34-10737418206, default = 2048) or &#123;+-&#125;size&#123;KMGTP&#125;: </span></span><br><span class="line"><span class="string">Last sector (2048-10737418206, default = 10737418206) or &#123;+-&#125;size&#123;KMGTP&#125;: </span></span><br><span class="line"><span class="string">Current type is '</span>Linux filesystem<span class="string">'</span></span><br><span class="line"><span class="string">Hex code or GUID (L to show codes, Enter = 8300): </span></span><br><span class="line"><span class="string">Changed type of partition to '</span>Linux filesystem<span class="string">'</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Command (? for help): p</span></span><br><span class="line"><span class="string">Disk /dev/sdb: 10737418240 sectors, 5.0 TiB</span></span><br><span class="line"><span class="string">Model: Virtual disk    </span></span><br><span class="line"><span class="string">Sector size (logical/physical): 512/512 bytes</span></span><br><span class="line"><span class="string">Disk identifier (GUID): CC9ED012-8B6C-4682-B9FF-65A4CD1E92A0</span></span><br><span class="line"><span class="string">Partition table holds up to 128 entries</span></span><br><span class="line"><span class="string">Main partition table begins at sector 2 and ends at sector 33</span></span><br><span class="line"><span class="string">First usable sector is 34, last usable sector is 10737418206</span></span><br><span class="line"><span class="string">Partitions will be aligned on 2048-sector boundaries</span></span><br><span class="line"><span class="string">Total free space is 2014 sectors (1007.0 KiB)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Number  Start (sector)    End (sector)  Size       Code  Name</span></span><br><span class="line"><span class="string">   1            2048     10737418206   5.0 TiB     8300  Linux filesystem</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="6-通知系统硬盘大小已调整"><a href="#6-通知系统硬盘大小已调整" class="headerlink" title="6. 通知系统硬盘大小已调整"></a>6. 通知系统硬盘大小已调整</h2><p>只有进行下面这一步骤，df -hT时才会显示正常的硬盘空间大小</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 首先查看是否调整完分区后自动挂载分区了,如果挂载了要再卸载一次。(我这边是会出现自动挂载现象，如果没有卸载会出现问题1的错误。)</span></span><br><span class="line">root@minio-c1-node4:~<span class="comment"># df -hT</span></span><br><span class="line">Filesystem     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev           devtmpfs  3.9G     0  3.9G   0% /dev</span><br><span class="line">tmpfs          tmpfs     798M  8.6M  790M   2% /run</span><br><span class="line">/dev/sda2      ext4       58G  2.3G   53G   5% /</span><br><span class="line">tmpfs          tmpfs     3.9G     0  3.9G   0% /dev/shm</span><br><span class="line">tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs          tmpfs     3.9G     0  3.9G   0% /sys/fs/cgroup</span><br><span class="line">/dev/sda1      ext4     1000M   47M  885M   5% /boot</span><br><span class="line">tmpfs          tmpfs     798M     0  798M   0% /run/user/0</span><br><span class="line">/dev/sdb1      ext4     1007G  158M  956G   1% /data</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># ext分区格使用命令进行调整</span></span><br><span class="line">resize2fs /dev/sdb1</span><br><span class="line"></span><br><span class="line"><span class="comment"># xfs分区格式使用命令进行调整</span></span><br><span class="line">xfs_growfs /dev/sdb1</span><br></pre></td></tr></table></figure>
+
+<h2 id="7-遇到问题"><a href="#7-遇到问题" class="headerlink" title="7. 遇到问题"></a>7. 遇到问题</h2><p>问题1: The filesystem is already 268435200 (4k) blocks long.  Nothing to do!</p>
+<p>将挂载的分区再次卸载，然后再执行resize2fs或者xfs_growfs命令。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">root@minio-c1-node4:~<span class="comment"># resize2fs /dev/sdb1 </span></span><br><span class="line">resize2fs 1.44.5 (15-Dec-2018)</span><br><span class="line">The filesystem is already 268435200 (4k) blocks long.  Nothing to <span class="keyword">do</span>!</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">root@minio-c1-node4:~<span class="comment"># df -hT</span></span><br><span class="line">Filesystem     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev           devtmpfs  3.9G     0  3.9G   0% /dev</span><br><span class="line">tmpfs          tmpfs     798M  8.6M  790M   2% /run</span><br><span class="line">/dev/sda2      ext4       58G  2.3G   53G   5% /</span><br><span class="line">tmpfs          tmpfs     3.9G     0  3.9G   0% /dev/shm</span><br><span class="line">tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs          tmpfs     3.9G     0  3.9G   0% /sys/fs/cgroup</span><br><span class="line">/dev/sda1      ext4     1000M   47M  885M   5% /boot</span><br><span class="line">tmpfs          tmpfs     798M     0  798M   0% /run/user/0</span><br><span class="line">/dev/sdb1      ext4     1007G  158M  956G   1% /data</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/jetinzhang/jetinzhang.github.io/master/about/images/WeChatQR.jpg',
+  alipayImage: 'https://raw.githubusercontent.com/jetinzhang/jetinzhang.github.io/master/about/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>本文作者:  </strong>Jetinzhang</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>本文链接:  </strong>
+          <a href="/2019/10/25/Linux 分区MBR调整为GPT并扩大容量/" target="_blank" title="Linux 分区MBR调整为GPT，并扩大容量">https://jetinzhang.github.io/2019/10/25/Linux 分区MBR调整为GPT并扩大容量/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>版权声明:   </strong>
+            本博客所有文章除特别声明外，均采用 <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            许可协议。转载请注明出处
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/" rel="tag">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/gdisk/" rel="tag">gdisk</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%88%86%E5%8C%BA/" rel="tag">分区</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%89%A9%E5%AE%B9/" rel="tag">扩容</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux-分区MBR调整为GPT，并扩大容量"><span class="nav-number">1.</span> <span class="nav-text">Linux 分区MBR调整为GPT，并扩大容量</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-说明"><span class="nav-number">1.1.</span> <span class="nav-text">1. 说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-安装工具"><span class="nav-number">1.2.</span> <span class="nav-text">2. 安装工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-卸载硬盘挂载的目录"><span class="nav-number">1.3.</span> <span class="nav-text">3. 卸载硬盘挂载的目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-判断硬盘类型"><span class="nav-number">1.4.</span> <span class="nav-text">4. 判断硬盘类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-MBR转换为GPT并扩容"><span class="nav-number">1.5.</span> <span class="nav-text">5. MBR转换为GPT并扩容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-转换为gpt"><span class="nav-number">1.5.1.</span> <span class="nav-text">5.1. 转换为gpt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-调整分区大小"><span class="nav-number">1.5.2.</span> <span class="nav-text">5.2. 调整分区大小</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-通知系统硬盘大小已调整"><span class="nav-number">1.6.</span> <span class="nav-text">6. 通知系统硬盘大小已调整</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-遇到问题"><span class="nav-number">1.7.</span> <span class="nav-text">7. 遇到问题</span></a></li></ol></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2019 Jetinzhang Blog All Rights Reserved.</p>
+	      
+	      
+  		   	<p id="copyRightCn">Jetinzhang 保留所有权利</p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            Jetinzhang Blog
+          </div>
+          <div class="panel-body">
+            Copyright © 2019 Jetinzhang All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>
