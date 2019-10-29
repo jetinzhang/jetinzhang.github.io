@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>kubespray自动化部署kubernetes 1.16.0 | Jetinzhang Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="kuberneteskubespraydockeransible" />
+  
+  
+  
+  
+  <meta name="description" content="Kubespray自动化部署Kubernetes 1.16.0Author: jetinzhang &amp;#x6a;&amp;#101;&amp;#116;&amp;#105;&amp;#110;&amp;#x7a;&amp;#104;&amp;#x61;&amp;#110;&amp;#103;&amp;#x40;&amp;#49;&amp;#x36;&amp;#x33;&amp;#46;&amp;#x63;&amp;#111;&amp;#x6d; 1. 参考资料首先感谢以下文章的作者，才能写出这篇文档 (我不确定以下所有链接是否是原">
+<meta name="keywords" content="kubernetes,kubespray,docker,ansible">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubespray自动化部署Kubernetes 1.16.0">
+<meta property="og:url" content="https:&#x2F;&#x2F;jetinzhang.github.io&#x2F;2019&#x2F;10&#x2F;29&#x2F;Kubespray%E8%87%AA%E5%8A%A8%E5%8C%96%E9%83%A8%E7%BD%B2Kubernetes%20v1.16.0&#x2F;index.html">
+<meta property="og:site_name" content="Jetinzhang Blog">
+<meta property="og:description" content="Kubespray自动化部署Kubernetes 1.16.0Author: jetinzhang &amp;#x6a;&amp;#101;&amp;#116;&amp;#105;&amp;#110;&amp;#x7a;&amp;#104;&amp;#x61;&amp;#110;&amp;#103;&amp;#x40;&amp;#49;&amp;#x36;&amp;#x33;&amp;#46;&amp;#x63;&amp;#111;&amp;#x6d; 1. 参考资料首先感谢以下文章的作者，才能写出这篇文档 (我不确定以下所有链接是否是原">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-29T15:11:04.187Z">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Jetinzhang Blog" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="border-width: 0;">
+                <p>Jetinzhang Blog</p>
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-Kubespray自动化部署Kubernetes v1.16.0" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      Kubespray自动化部署Kubernetes 1.16.0
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2019/10/29/Kubespray%E8%87%AA%E5%8A%A8%E5%8C%96%E9%83%A8%E7%BD%B2Kubernetes%20v1.16.0/" class="article-date">
+	  <time datetime="2019-10-29T15:10:03.000Z" itemprop="datePublished">2019-10-29</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/kubernetes/">kubernetes</a>
+
+      
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Kubespray自动化部署Kubernetes-1-16-0"><a href="#Kubespray自动化部署Kubernetes-1-16-0" class="headerlink" title="Kubespray自动化部署Kubernetes 1.16.0"></a>Kubespray自动化部署Kubernetes 1.16.0</h1><p><em>Author: jetinzhang <a href="mailto:&#x6a;&#101;&#116;&#105;&#110;&#x7a;&#104;&#x61;&#110;&#103;&#x40;&#49;&#x36;&#x33;&#46;&#x63;&#111;&#x6d;" target="_blank" rel="noopener">&#x6a;&#101;&#116;&#105;&#110;&#x7a;&#104;&#x61;&#110;&#103;&#x40;&#49;&#x36;&#x33;&#46;&#x63;&#111;&#x6d;</a></em></p>
+<h2 id="1-参考资料"><a href="#1-参考资料" class="headerlink" title="1. 参考资料"></a>1. 参考资料</h2><p>首先感谢以下文章的作者，才能写出这篇文档 (我不确定以下所有链接是否是原创链接)</p>
+<ul>
+<li><a href="https://jicki.me/kubernetes/docker/2018/12/21/k8s-1.13.1-kubespray/" target="_blank" rel="noopener">k8s 1.13.1 to kubespray</a></li>
+<li><a href="https://www.kubernetes.org.cn/5012.html" target="_blank" rel="noopener">使用Kubespray自动化部署Kubernetes 1.13.1</a></li>
+<li><a href="https://yq.aliyun.com/articles/505382" target="_blank" rel="noopener">使用Kubespray 部署kubernetes 高可用集群</a></li>
+<li><a href="https://blog.csdn.net/lilizhou2008/article/details/88286664" target="_blank" rel="noopener">使用Kubespray 2.8.3部署生产可用的Kubernetes集群(1.12.5)</a></li>
+<li><a href="https://blog.csdn.net/vah101/article/details/86215350" target="_blank" rel="noopener">kubespray安装过程各节点初始化脚本</a></li>
+<li><a href="https://github.com/anjia0532/gcr.io_mirror" target="_blank" rel="noopener">k8s镜像被墙解决方案gcr.azk8s.cn – 感谢anjia0532，在他的github中看到了README文件</a></li>
+<li><a href="https://mirror.azure.cn/help/gcr-proxy-cache.html" target="_blank" rel="noopener">感谢微软代理的kubernetes镜像,让国内通过将gcr.io替换为gcr.azk8s.cn即可直接拉取到镜像</a></li>
+<li><a href="https://console.cloud.google.com/gcr/images/google-containers" target="_blank" rel="noopener">查看k8s官方最新镜像-需要科学上网</a></li>
+<li><a href="https://feisky.gitbooks.io/kubernetes/practice/certificate-rotation.html" target="_blank" rel="noopener">证书轮换</a></li>
+</ul>
+<h2 id="2-安装需具备的知识"><a href="#2-安装需具备的知识" class="headerlink" title="2. 安装需具备的知识"></a>2. 安装需具备的知识</h2><p>Linux, Ansible, Docker</p>
+<h2 id="3-环境说明"><a href="#3-环境说明" class="headerlink" title="3. 环境说明"></a>3. 环境说明</h2><p>Ansible: v2.7.8<br>kubespray: v2.11.0<br>kubernetes: v1.16.0</p>
+<table>
+<thead>
+<tr>
+<th align="center">主机名</th>
+<th align="center">ip地址</th>
+<th align="left">配置</th>
+<th align="center">角色</th>
+<th align="center">系统</th>
+<th align="center">docker版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">ops-01</td>
+<td align="center">10.1.20.7</td>
+<td align="left">CPU: 4核 + 内存: 8G + 硬盘: 200G</td>
+<td align="center">Kubespray_admin</td>
+<td align="center">debian10 (内核：4.19.37-5)</td>
+<td align="center">19.03.2</td>
+</tr>
+<tr>
+<td align="center">master1</td>
+<td align="center">10.1.20.81</td>
+<td align="left">CPU: 4核 + 内存: 8G + 硬盘: 200G</td>
+<td align="center">master (etcd)</td>
+<td align="center">debian10 (内核：4.19.37-5)</td>
+<td align="center">19.03.2</td>
+</tr>
+<tr>
+<td align="center">master2</td>
+<td align="center">10.1.20.82</td>
+<td align="left">CPU: 4核 + 内存: 8G + 硬盘: 200G</td>
+<td align="center">master (etcd)</td>
+<td align="center">debian10 (内核：4.19.37-5)</td>
+<td align="center">19.03.2</td>
+</tr>
+<tr>
+<td align="center">master3</td>
+<td align="center">10.1.20.83</td>
+<td align="left">CPU: 4核 + 内存: 8G + 硬盘: 200G</td>
+<td align="center">master (etcd)</td>
+<td align="center">debian10 (内核：4.19.37-5)</td>
+<td align="center">19.03.2</td>
+</tr>
+<tr>
+<td align="center">node1</td>
+<td align="center">10.1.20.84</td>
+<td align="left">CPU: 4核 + 内存: 64G + 硬盘: 500G</td>
+<td align="center">node</td>
+<td align="center">debian10 (内核：4.19.37-5)</td>
+<td align="center">19.03.2</td>
+</tr>
+<tr>
+<td align="center">node1</td>
+<td align="center">10.1.20.85</td>
+<td align="left">CPU: 4核 + 内存: 64G + 硬盘: 500G</td>
+<td align="center">node</td>
+<td align="center">debian10 (内核：4.19.37-5)</td>
+<td align="center">19.03.2</td>
+</tr>
+<tr>
+<td align="center">node1</td>
+<td align="center">10.1.20.86</td>
+<td align="left">CPU: 4核 + 内存: 64G + 硬盘: 500G</td>
+<td align="center">node</td>
+<td align="center">debian10 (内核：4.19.37-5)</td>
+<td align="center">19.03.2</td>
+</tr>
+</tbody></table>
+<h3 id="3-1-docker版本要求"><a href="#3-1-docker版本要求" class="headerlink" title="3.1. docker版本要求"></a>3.1. docker版本要求</h3><p><a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.15.md" target="_blank" rel="noopener">kubernetes变更日志</a></p>
+<p>The list of validated docker versions remains unchanged.<br>The current list is 1.13.1, 17.03, 17.06, 17.09, 18.06, 18.09. (#72823, #72831)</p>
+<h2 id="4-初始化环境"><a href="#4-初始化环境" class="headerlink" title="4. 初始化环境"></a>4. 初始化环境</h2><p>==注意：所有k8s集群服务器上执行–除了ops-01这一台Kubespray_admin服务器==</p>
+<h3 id="4-1-关闭防火墙"><a href="#4-1-关闭防火墙" class="headerlink" title="4.1. 关闭防火墙"></a>4.1. 关闭防火墙</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># debian10 默认未安装selinux, 安装了的请自行关闭</span></span><br><span class="line"></span><br><span class="line">systemctl stop firewalld</span><br><span class="line">systemctl <span class="built_in">disable</span> firewalld</span><br><span class="line"></span><br><span class="line"><span class="comment"># 临时关闭selinux</span></span><br><span class="line">setenforce 0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 永久关闭selinux (重启生效)  /etc/sysconfig/selinux 是一个软链接文件所以要加上 --follow-symlinks</span></span><br><span class="line">sed -i --follow-symlinks <span class="string">'s/SELINUX=enforcing/SELINUX=disabled/g'</span> /etc/sysconfig/selinux</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-关闭虚拟内存"><a href="#4-2-关闭虚拟内存" class="headerlink" title="4.2. 关闭虚拟内存"></a>4.2. 关闭虚拟内存</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">swapoff -a</span><br></pre></td></tr></table></figure>
+
+<p>修改/etc/fstab 注释掉有swap的那一行</p>
+<h3 id="4-3-设置debian-iptables模式"><a href="#4-3-设置debian-iptables模式" class="headerlink" title="4.3. 设置debian iptables模式"></a>4.3. 设置debian iptables模式</h3><p>链接地址：<a href="https://wiki.debian.org/nftables" target="_blank" rel="noopener">https://wiki.debian.org/nftables</a></p>
+<p><a href="https://www.debian.org/releases/stable/amd64/release-notes/ch-whats-new.zh-cn.html" target="_blank" rel="noopener">https://www.debian.org/releases/stable/amd64/release-notes/ch-whats-new.zh-cn.html</a></p>
+<p>网络过滤现在默认基于 nftables 框架<br>从 iptables v1.8.2 开始，该二进制包包含了 iptables-nft 和 iptables-legacy，它们是 iptables 命令行界面的两个变种。 Buster 默认使用基于 nftables 的变种，它使用 nf_tables Linux 内核子系统。旧式（legacy）变种使用 x_tables Linux 内核子系统。可以使用 update-alternatives 系统来选择变种。</p>
+<p>这将应用于所有相关的程序和实用工具：</p>
+<ul>
+<li>iptables</li>
+<li>iptables-save</li>
+<li>iptables-restore</li>
+<li>ip6tables</li>
+<li>ip6tables-save</li>
+<li>ip6tables-restore</li>
+<li>arptables</li>
+<li>arptables-save</li>
+<li>arptables-restore</li>
+<li>ebtables</li>
+<li>ebtables-save</li>
+<li>ebtables-restore</li>
+</ul>
+<p>以上所有的命令都新增了 -nft 和 -legacy 变种。-nft 变种是给不能或不愿意迁移至原生的 nftables 命令行界面的用户准备的。然而，我们强烈建议您切换至 nftables 界面，而不是继续使用 iptables。</p>
+<p>nftables 提供了 iptables 的完整替代，它具有更好的性能，全新的语法，对 IPv4/IPv6 双栈防火墙的更好的支持，用于动态更新规则集的完整的原子操作，提供给第三方应用的 Netlink API，利用改进的通用 set 和 map 基础架构实现的更快速的包分类，以及许多其他改进。</p>
+<p>这个变化与其他主要的 Linux 发行版一致，例如 RedHat 现在也使用 nftables 作为默认的防火墙工具。</p>
+<p>另外，请注意所有的 iptables 二进制程序现在都被安装在 /usr/sbin 而不是 /sbin。我们为了兼容性保留了一个符号链接，但它会在 buster 发布周期之后被移除。在脚本中使用的绝对路径需要被更正，并且需要避免使用。</p>
+<p>详细的文档可以在该软件包的 README 和 NEWS 文件，以及 Debian 维基中找到。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看现在iptable版本及模式</span></span><br><span class="line">root@kfpt-c1-master1:~<span class="comment"># iptables -V</span></span><br><span class="line">iptables v1.8.2 (nf_tables)</span><br><span class="line"></span><br><span class="line"><span class="comment"># iptables设置为legacy模式</span></span><br><span class="line">update-alternatives --<span class="built_in">set</span> iptables /usr/sbin/iptables-legacy</span><br><span class="line"></span><br><span class="line"><span class="comment"># 再次查看iptable版本及模式</span></span><br><span class="line">root@kfpt-c1-master1:~<span class="comment"># iptables -V</span></span><br><span class="line">iptables v1.8.2 (legacy)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 还原dbian10默认iptables模式</span></span><br><span class="line">update-alternatives --<span class="built_in">set</span> iptables /usr/sbin/iptables-nft</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-使用kubespray一键部署kubernetes"><a href="#5-使用kubespray一键部署kubernetes" class="headerlink" title="5. 使用kubespray一键部署kubernetes"></a>5. 使用kubespray一键部署kubernetes</h2><h3 id="5-1-获取kubespray并进行配置"><a href="#5-1-获取kubespray并进行配置" class="headerlink" title="5.1. 获取kubespray并进行配置"></a>5.1. 获取kubespray并进行配置</h3><h4 id="5-1-1-安装kubespray"><a href="#5-1-1-安装kubespray" class="headerlink" title="5.1.1. 安装kubespray"></a>5.1.1. 安装kubespray</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装ansible密码登录方式支持 sshpass</span></span><br><span class="line">apt-get install sshpass</span><br><span class="line"></span><br><span class="line">git <span class="built_in">clone</span> https://github.com/kubernetes-sigs/kubespray.git</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装 kubespray 依赖，若无特殊说明，后续操作均在~/kubespray目录下执行</span></span><br><span class="line"><span class="built_in">cd</span> kubespray</span><br><span class="line">pip install -r requirements.txt</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-1-2-复制一份配置文件"><a href="#5-1-2-复制一份配置文件" class="headerlink" title="5.1.2. 复制一份配置文件"></a>5.1.2. 复制一份配置文件</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 复制一份集群配置文件</span></span><br><span class="line">cp inventory/sample/ inventory/kfpt-cluster/ -ra</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-1-3-修改配置文件"><a href="#5-1-3-修改配置文件" class="headerlink" title="5.1.3. 修改配置文件"></a>5.1.3. 修改配置文件</h4><h5 id="5-1-3-1-修改服务器配置文件"><a href="#5-1-3-1-修改服务器配置文件" class="headerlink" title="5.1.3.1. 修改服务器配置文件"></a>5.1.3.1. 修改服务器配置文件</h5><p>inventory/kfpt-cluster/inventory.ini</p>
+<p>vim inventory/kfpt-cluster/inventory.ini</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ## Configure 'ip' variable to bind kubernetes services on a</span></span><br><span class="line"><span class="comment"># ## different ip than the default iface</span></span><br><span class="line"><span class="comment"># ## We should set etcd_member_name for etcd cluster. The node that is not a etcd member do not need to set the value, or can set the empty string value.</span></span><br><span class="line"><span class="section">[all]</span></span><br><span class="line"><span class="comment"># node1 ansible_host=95.54.0.12  # ip=10.3.0.1 etcd_member_name=etcd1</span></span><br><span class="line"><span class="comment"># node2 ansible_host=95.54.0.13  # ip=10.3.0.2 etcd_member_name=etcd2</span></span><br><span class="line"><span class="comment"># node3 ansible_host=95.54.0.14  # ip=10.3.0.3 etcd_member_name=etcd3</span></span><br><span class="line"><span class="comment"># node4 ansible_host=95.54.0.15  # ip=10.3.0.4 etcd_member_name=etcd4</span></span><br><span class="line"><span class="comment"># node5 ansible_host=95.54.0.16  # ip=10.3.0.5 etcd_member_name=etcd5</span></span><br><span class="line"><span class="comment"># node6 ansible_host=95.54.0.17  # ip=10.3.0.6 etcd_member_name=etcd6</span></span><br><span class="line"></span><br><span class="line">master1 ansible_ssh_host=10.1.20.81 ansible_ssh_user=root ansible_ssh_port=22 ansible_ssh_pass=yourpassword etcd_member_name=etcd1</span><br><span class="line">master2 ansible_ssh_host=10.1.20.82 ansible_ssh_user=root ansible_ssh_port=22 ansible_ssh_pass=yourpassword etcd_member_name=etcd2</span><br><span class="line">master3 ansible_ssh_host=10.1.20.83 ansible_ssh_user=root ansible_ssh_port=22 ansible_ssh_pass=yourpassword etcd_member_name=etcd3</span><br><span class="line">node1 ansible_ssh_host=10.1.20.84 ansible_ssh_user=root ansible_ssh_port=22 ansible_ssh_pass=yourpassword</span><br><span class="line">node2 ansible_ssh_host=10.1.20.85 ansible_ssh_user=root ansible_ssh_port=22 ansible_ssh_pass=yourpassword</span><br><span class="line">node3 ansible_ssh_host=10.1.20.86 ansible_ssh_user=root ansible_ssh_port=22 ansible_ssh_pass=yourpassword</span><br><span class="line"></span><br><span class="line"><span class="comment"># ## configure a bastion host if your nodes are not directly reachable</span></span><br><span class="line"><span class="comment"># bastion ansible_host=x.x.x.x ansible_user=some_user</span></span><br><span class="line"></span><br><span class="line"><span class="section">[kube-master]</span></span><br><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># node2</span></span><br><span class="line">master1</span><br><span class="line">master2</span><br><span class="line">master3</span><br><span class="line"></span><br><span class="line"><span class="section">[etcd]</span></span><br><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># node2</span></span><br><span class="line"><span class="comment"># node3</span></span><br><span class="line">master1</span><br><span class="line">master2</span><br><span class="line">master3</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="section">[kube-node]</span></span><br><span class="line"><span class="comment"># node2</span></span><br><span class="line"><span class="comment"># node3</span></span><br><span class="line"><span class="comment"># node4</span></span><br><span class="line"><span class="comment"># node5</span></span><br><span class="line"><span class="comment"># node6</span></span><br><span class="line">node1</span><br><span class="line">node2</span><br><span class="line">node3</span><br><span class="line"></span><br><span class="line"><span class="section">[calico-rr]</span></span><br><span class="line"></span><br><span class="line"><span class="section">[k8s-cluster:children]</span></span><br><span class="line">kube-master</span><br><span class="line">kube-node</span><br><span class="line">calico-rr</span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-2-修改全局配置文件"><a href="#5-1-3-2-修改全局配置文件" class="headerlink" title="5.1.3.2. 修改全局配置文件"></a>5.1.3.2. 修改全局配置文件</h5><p>inventory/kfpt-cluster/group_vars/all/all.yml</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 修改配置文件all.yaml</span></span><br><span class="line">vim inventory/kfpt-cluster/group_vars/all/all.yml</span><br></pre></td></tr></table></figure>
+
+<p>修改如下配置:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 启用本地负载均衡 apiserver</span></span><br><span class="line"><span class="attr">loadbalancer_apiserver_localhost:</span> <span class="literal">true</span></span><br><span class="line"><span class="comment"># 加载内核模块，否则 ceph, gfs 等无法挂载客户端</span></span><br><span class="line"><span class="attr">kubelet_load_modules:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-3-修改下载配置文件"><a href="#5-1-3-3-修改下载配置文件" class="headerlink" title="5.1.3.3. 修改下载配置文件"></a>5.1.3.3. 修改下载配置文件</h5><p>roles/download/defaults/main.yml</p>
+<p>一般修改这个配置即可</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># gcr_image_repo: "gcr.io"</span></span><br><span class="line"><span class="attr">gcr_image_repo:</span> <span class="string">"gcr.azk8s.cn"</span></span><br></pre></td></tr></table></figure>
+
+<p>或者直接替换字符串</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># quay.io的镜像国内是可访问的，所以不需要替换，如果有自建docker私库的话，可以拉取下来推到私库，然后替换quay.io为私库地址，这样拉取镜像快一些。</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 替换官方镜像gcr.io为微软中国私库地址gcr.azk8s.cn</span></span><br><span class="line">sed -i <span class="string">'s#gcr.io#gcr.azk8s.cn#g'</span> roles/download/defaults/main.yml</span><br><span class="line"></span><br><span class="line"><span class="comment"># 可能还涉及到需要修改的地方,此次部署暂未修改</span></span><br><span class="line"><span class="comment"># sed -i 's#k8s.gcr.io#gcr.azk8s.cn#g' roles/download/defaults/main.yml</span></span><br><span class="line"><span class="comment"># sed -i 's#google_containers#google-containers#g' roles/download/defaults/main.yml</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 如果自建私库的话 (此次部署暂未修改)</span></span><br><span class="line">sed -i <span class="string">'s#gcr.io#registry-vpc.cn-shenzhen.aliyuncs.com#g'</span> roles/download/defaults/main.yml</span><br><span class="line"></span><br><span class="line"><span class="comment"># 可能还涉及到需要修改的地方,此次部署暂未修改</span></span><br><span class="line"><span class="comment"># sed -i 's#k8s.gcr.io#registry-vpc.cn-shenzhen.aliyuncs.com#g' roles/download/defaults/main.yml</span></span><br><span class="line"><span class="comment"># sed -i 's#google_containers#google-containers#g' roles/download/defaults/main.yml</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-4-修改k8s集群部署配置文件"><a href="#5-1-3-4-修改k8s集群部署配置文件" class="headerlink" title="5.1.3.4. 修改k8s集群部署配置文件"></a>5.1.3.4. 修改k8s集群部署配置文件</h5><p>inventory/kfpt-cluster/group_vars/k8s-cluster/k8s-cluster.yml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># kubernetes image repo define</span></span><br><span class="line"><span class="comment">#kube_image_repo: "gcr.io/google-containers"</span></span><br><span class="line"><span class="attr">kube_image_repo:</span> <span class="string">"gcr.azk8s.cn/google-containers"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 操作系统守护进程预留资源 (根据节点配置进行调整)</span></span><br><span class="line"><span class="comment">## Optionally reserve resources for OS system daemons.</span></span><br><span class="line"><span class="comment"># system_reserved: true</span></span><br><span class="line"><span class="comment">## Uncomment to override default values</span></span><br><span class="line"><span class="comment"># system_memory_reserved: 512M</span></span><br><span class="line"><span class="comment"># system_cpu_reserved: 500m</span></span><br><span class="line"><span class="comment">## Reservation for master hosts</span></span><br><span class="line"><span class="comment"># system_master_memory_reserved: 256M</span></span><br><span class="line"><span class="comment"># system_master_cpu_reserved: 250m</span></span><br><span class="line"><span class="attr">system_reserved:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">system_memory_reserved:</span> <span class="number">2048</span><span class="string">M</span></span><br><span class="line"><span class="attr">system_cpu_reserved:</span> <span class="number">1000</span><span class="string">m</span></span><br><span class="line"><span class="attr">system_master_memory_reserved:</span> <span class="number">1024</span><span class="string">M</span></span><br><span class="line"><span class="attr">system_master_cpu_reserved:</span> <span class="number">500</span><span class="string">m</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-5-修改k8s-node节点kubelet相关配置"><a href="#5-1-3-5-修改k8s-node节点kubelet相关配置" class="headerlink" title="5.1.3.5. 修改k8s node节点kubelet相关配置"></a>5.1.3.5. 修改k8s node节点kubelet相关配置</h5><p>vim roles/kubernetes/node/defaults/main.yml</p>
+<p>根据自身服务器配置调整相关参数 (根据节点cpu、内存配置进行适当的调整) ，此次部署调整了以下参数</p>
+<p><strong>kubelet_custom_flags 和 kubelet_node_custom_flags参数比较关键，用于内存不够时驱赶pod</strong><br>==kubelet_custom_flags (设置master节点)<br>kubelet_node_custom_flags (设置node节点)==</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置硬性内存驱赶条件 (个人理解)</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">"--eviction-hard=memory.available&lt;800Mi"</span></span><br><span class="line"><span class="comment"># 软驱赶时间间隔</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">"--eviction-soft-grace-period=memory.available=30s"</span></span><br><span class="line"><span class="comment"># 设置软性内存驱赶条件 - 软性驱动条件应该大于硬性驱动条件 (个人理解)</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">"--eviction-soft=memory.available&lt;1200Mi"</span></span><br></pre></td></tr></table></figure>
+
+<p>==如果未配置这两个选项 node节点可能会因内存不足导致节点挂掉，导致大量应用无法正常使用，出现以下状况。==</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">root@kfpt-c1-master1:~<span class="comment"># kubectl get nodes</span></span><br><span class="line">NAME              STATUS   ROLES    AGE   VERSION</span><br><span class="line">kfpt-c1-master1   Ready    master   30h   v1.16.0</span><br><span class="line">kfpt-c1-master2   Ready    master   30h   v1.16.0</span><br><span class="line">kfpt-c1-master3   Ready    master   30h   v1.16.0</span><br><span class="line">kfpt-c1-node1     NotReady    &lt;none&gt;   30h   v1.16.0</span><br><span class="line">kfpt-c1-node2     NotReady    &lt;none&gt;   30h   v1.16.0</span><br><span class="line">kfpt-c1-node3     NotReady    &lt;none&gt;   30h   v1.16.0</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Reserve this space for kube resources</span></span><br><span class="line"><span class="comment"># kube_memory_reserved: 256M</span></span><br><span class="line"><span class="comment"># kube_cpu_reserved: 100m</span></span><br><span class="line"><span class="attr">kube_memory_reserved:</span> <span class="number">2048</span><span class="string">M</span></span><br><span class="line"><span class="attr">kube_cpu_reserved:</span> <span class="number">1200</span><span class="string">m</span></span><br><span class="line"><span class="comment"># Reservation for master hosts</span></span><br><span class="line"><span class="comment"># kube_master_memory_reserved: 512M</span></span><br><span class="line"><span class="comment"># kube_master_cpu_reserved: 200m</span></span><br><span class="line"><span class="attr">kube_master_memory_reserved:</span> <span class="number">1500</span><span class="string">M</span></span><br><span class="line"><span class="attr">kube_master_cpu_reserved:</span> <span class="number">800</span><span class="string">m</span></span><br><span class="line"></span><br><span class="line"><span class="attr">kubelet_status_update_frequency:</span> <span class="number">10</span><span class="string">s</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Requests for load balancer app</span></span><br><span class="line"><span class="comment"># loadbalancer_apiserver_memory_requests: 32M</span></span><br><span class="line"><span class="comment"># loadbalancer_apiserver_cpu_requests: 25m</span></span><br><span class="line"><span class="attr">loadbalancer_apiserver_memory_requests:</span> <span class="number">100</span><span class="string">M</span></span><br><span class="line"><span class="attr">loadbalancer_apiserver_cpu_requests:</span> <span class="number">50</span><span class="string">m</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Uncomment if you need to enable deprecated runtimes</span></span><br><span class="line"><span class="attr">kube_api_runtime_config:</span></span><br><span class="line"><span class="comment">#   - apps/v1beta1=true</span></span><br><span class="line"><span class="comment">#   - apps/ve1beta2=true</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">extensions/v1beta1/daemonsets=true</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">extensions/v1beta1/deployments=true</span></span><br><span class="line"><span class="comment">#   - extensions/v1beta1/replicasets=true</span></span><br><span class="line"><span class="comment">#   - extensions/v1beta1/networkpolicies=true</span></span><br><span class="line"><span class="comment">#   - extensions/v1beta1/podsecuritypolicies=true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># A port range to reserve for services with NodePort visibility.</span></span><br><span class="line"><span class="comment"># Inclusive at both ends of the range.</span></span><br><span class="line"><span class="attr">kube_apiserver_node_port_range:</span> <span class="string">"30000-32767"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Configure the amount of pods able to run on single node</span></span><br><span class="line"><span class="comment"># default is equal to application default</span></span><br><span class="line"><span class="attr">kubelet_max_pods:</span> <span class="number">110</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## Support custom flags to be passed to kubelet</span></span><br><span class="line"><span class="comment">#kubelet_custom_flags: []</span></span><br><span class="line"><span class="attr">kubelet_custom_flags:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">"--eviction-hard=memory.available&lt;800Mi"</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">"--eviction-soft-grace-period=memory.available=30s"</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">"--eviction-soft=memory.available&lt;1200Mi"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## Support custom flags to be passed to kubelet only on nodes, not masters</span></span><br><span class="line"><span class="comment">#kubelet_node_custom_flags: []</span></span><br><span class="line"><span class="attr">kubelet_node_custom_flags:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">"--eviction-hard=memory.available&lt;2000Mi"</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">"--eviction-soft-grace-period=memory.available=30s"</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">"--eviction-soft=memory.available&lt;5000Mi"</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-6-修改扩展组件配置文件"><a href="#5-1-3-6-修改扩展组件配置文件" class="headerlink" title="5.1.3.6. 修改扩展组件配置文件"></a>5.1.3.6. 修改扩展组件配置文件</h5><p>inventory/kfpt-cluster/group_vars/k8s-cluster/addons.yml</p>
+<p>启用top支持，安装metrics_server。</p>
+<p>开启证书轮换</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># metrics_server_enabled: false</span></span><br><span class="line"><span class="attr">metrics_server_enabled:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># registry_disk_size: "10Gi"utomatically generate a new key and request a new certificate from the Kubernetes API as the current certificate approaches expiration</span></span><br><span class="line"><span class="comment"># kubelet_rotate_certificates: true</span></span><br><span class="line"><span class="attr">kubelet_rotate_certificates:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>若觉得metrics_server版本不够新可更改一下版本号<br>vi roles/download/defaults/main.yml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># metrics_server_version: "v0.3.3"</span></span><br><span class="line"><span class="attr">metrics_server_version:</span> <span class="string">"v0.3.5"</span></span><br></pre></td></tr></table></figure>
+
+<p>启用Dashboard 和 helm</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Kubernetes dashboard</span></span><br><span class="line"><span class="comment"># RBAC required. see docs/getting-started.md for access details.</span></span><br><span class="line"><span class="attr">dashboard_enabled:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Helm deployment</span></span><br><span class="line"><span class="comment"># helm_enabled: false</span></span><br><span class="line"><span class="attr">helm_enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-7-修改k8s-dashboard-模板文件"><a href="#5-1-3-7-修改k8s-dashboard-模板文件" class="headerlink" title="5.1.3.7. 修改k8s dashboard 模板文件"></a>5.1.3.7. 修改k8s dashboard 模板文件</h5><p>roles/kubernetes-apps/ansible/templates/dashboard.yml.j2</p>
+<p>修改代码，使用NodePort方式访问Dashboard。</p>
+<p>vim roles/kubernetes-apps/ansible/templates/dashboard.yml.j2</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ------------------- Dashboard Service ------------------- #</span></span><br><span class="line"></span><br><span class="line"><span class="string">……</span></span><br><span class="line"><span class="string">前面部分省略</span></span><br><span class="line"><span class="string">……</span></span><br><span class="line"></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  type:</span> <span class="string">NodePort</span>  <span class="comment"># 添加这一行</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">    - port:</span> <span class="number">443</span></span><br><span class="line"><span class="attr">      targetPort:</span> <span class="number">8443</span></span><br><span class="line"><span class="attr">      nodePort:</span> <span class="number">30001</span> <span class="comment"># 添加这一行</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-8-修改docker参数"><a href="#5-1-3-8-修改docker参数" class="headerlink" title="5.1.3.8. 修改docker参数"></a>5.1.3.8. 修改docker参数</h5><p>inventory/kfpt-cluster/group_vars/all/docker.yml</p>
+<p>vim inventory/kfpt-cluster/group_vars/all/docker.yml</p>
+<p>其他参数根据自身需要进行调整</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">## Used to set docker daemon iptables options to true</span></span><br><span class="line"><span class="attr">docker_iptables_enabled:</span> <span class="string">"false"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Docker log options</span></span><br><span class="line"><span class="comment"># Rotate container stderr/stdout logs at 50m and keep last 5</span></span><br><span class="line"><span class="attr">docker_log_opts:</span> <span class="string">"--log-opt max-size=100m --log-opt max-file=5"</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-1-3-9-k8s虚拟内存检查是否启用（建议禁用虚拟内存）"><a href="#5-1-3-9-k8s虚拟内存检查是否启用（建议禁用虚拟内存）" class="headerlink" title="5.1.3.9. k8s虚拟内存检查是否启用（建议禁用虚拟内存）"></a>5.1.3.9. k8s虚拟内存检查是否启用（建议禁用虚拟内存）</h5><p>roles/kubernetes/node/defaults/main.yml</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 禁用虚拟内存检查</span></span><br><span class="line">vim roles/kubernetes/node/defaults/main.yml</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### 5.2. fail with swap on (default true)</span></span><br><span class="line"><span class="attr">kubelet_fail_swap_on:</span> <span class="literal">true</span></span><br><span class="line"><span class="comment"># kubelet_fail_swap_on: false</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-开始安装kubernetes"><a href="#5-2-开始安装kubernetes" class="headerlink" title="5.2. 开始安装kubernetes"></a>5.2. 开始安装kubernetes</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ansible-playbook -i inventory/kfpt-cluster/inventory.ini cluster.yml -b -v</span><br></pre></td></tr></table></figure>
+
+<p>安装完成</p>
+<h4 id="5-2-1-查看k8s集群状态"><a href="#5-2-1-查看k8s集群状态" class="headerlink" title="5.2.1. 查看k8s集群状态"></a>5.2.1. 查看k8s集群状态</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">root@kfpt-c1-master1:~<span class="comment"># kubectl get nodes -owide</span></span><br><span class="line">NAME              STATUS   ROLES    AGE    VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                       KERNEL-VERSION   CONTAINER-RUNTIME</span><br><span class="line">kfpt-c1-master1   Ready    master   135m   v1.16.0   10.1.20.81    &lt;none&gt;        Debian GNU/Linux 10 (buster)   4.19.0-5-amd64   docker://18.9.7</span><br><span class="line">kfpt-c1-master2   Ready    master   133m   v1.16.0   10.1.20.82    &lt;none&gt;        Debian GNU/Linux 10 (buster)   4.19.0-5-amd64   docker://18.9.7</span><br><span class="line">kfpt-c1-master3   Ready    master   133m   v1.16.0   10.1.20.83    &lt;none&gt;        Debian GNU/Linux 10 (buster)   4.19.0-5-amd64   docker://18.9.7</span><br><span class="line">kfpt-c1-node1     Ready    &lt;none&gt;   131m   v1.16.0   10.1.20.84    &lt;none&gt;        Debian GNU/Linux 10 (buster)   4.19.0-5-amd64   docker://18.9.7</span><br><span class="line">kfpt-c1-node2     Ready    &lt;none&gt;   131m   v1.16.0   10.1.20.85    &lt;none&gt;        Debian GNU/Linux 10 (buster)   4.19.0-5-amd64   docker://18.9.7</span><br><span class="line">kfpt-c1-node3     Ready    &lt;none&gt;   131m   v1.16.0   10.1.20.86    &lt;none&gt;        Debian GNU/Linux 10 (buster)   4.19.0-5-amd64   docker://18.9.7</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-2-2-测试应用部署"><a href="#5-2-2-测试应用部署" class="headerlink" title="5.2.2. 测试应用部署"></a>5.2.2. 测试应用部署</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl create deployment nginx --image=nginx</span><br></pre></td></tr></table></figure>
+
+<h4 id="dashboard-https证书访问"><a href="#dashboard-https证书访问" class="headerlink" title="dashboard https证书访问"></a>dashboard https证书访问</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 删除自动创建的证书</span></span><br><span class="line"></span><br><span class="line">kubectl delete secret kubernetes-dashboard-certs -n kube-system</span><br><span class="line"></span><br><span class="line"><span class="comment"># 通过自己的证书, 挂载给kubernetes-dashboard使用，创建方法有两种</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建方法一</span></span><br><span class="line">kubectl create secret generic kubernetes-dashboard-certs --from-file=certs/ -n kube-system</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建方法二</span></span><br><span class="line"></span><br><span class="line">kubectl create secret generic  kubernetes-dashboard-certs --from-file=certs/dashboard.key --from-file=certs/dashboard.crt -n kube-system</span><br></pre></td></tr></table></figure>
+
+<p>Dashboard yaml文件示例</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Copyright 2017 The Kubernetes Authors.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the "License");</span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.</span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#     http://www.apache.org/licenses/LICENSE-2.0</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software</span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an "AS IS" BASIS,</span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and</span></span><br><span class="line"><span class="comment"># limitations under the License.</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ------------------- Dashboard Secret ------------------- #</span></span><br><span class="line"></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Secret</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    k8s-app:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard-certs</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">Opaque</span></span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># ------------------- Dashboard Service Account ------------------- #</span></span><br><span class="line"></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    k8s-app:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># ------------------- Dashboard Role &amp; Role Binding ------------------- #</span></span><br><span class="line"></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard-minimal</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="comment"># Allow Dashboard to create 'kubernetes-dashboard-key-holder' secret.</span></span><br><span class="line"><span class="attr">- apiGroups:</span> <span class="string">[""]</span></span><br><span class="line"><span class="attr">  resources:</span> <span class="string">["secrets"]</span></span><br><span class="line"><span class="attr">  verbs:</span> <span class="string">["create"]</span></span><br><span class="line">  <span class="comment"># Allow Dashboard to create 'kubernetes-dashboard-settings' config map.</span></span><br><span class="line"><span class="attr">- apiGroups:</span> <span class="string">[""]</span></span><br><span class="line"><span class="attr">  resources:</span> <span class="string">["configmaps"]</span></span><br><span class="line"><span class="attr">  verbs:</span> <span class="string">["create"]</span></span><br><span class="line">  <span class="comment"># Allow Dashboard to get, update and delete Dashboard exclusive secrets.</span></span><br><span class="line"><span class="attr">- apiGroups:</span> <span class="string">[""]</span></span><br><span class="line"><span class="attr">  resources:</span> <span class="string">["secrets"]</span></span><br><span class="line"><span class="attr">  resourceNames:</span> <span class="string">["kubernetes-dashboard-key-holder",</span> <span class="string">"kubernetes-dashboard-certs"</span><span class="string">]</span></span><br><span class="line"><span class="attr">  verbs:</span> <span class="string">["get",</span> <span class="string">"update"</span><span class="string">,</span> <span class="string">"delete"</span><span class="string">]</span></span><br><span class="line">  <span class="comment"># Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.</span></span><br><span class="line"><span class="attr">- apiGroups:</span> <span class="string">[""]</span></span><br><span class="line"><span class="attr">  resources:</span> <span class="string">["configmaps"]</span></span><br><span class="line"><span class="attr">  resourceNames:</span> <span class="string">["kubernetes-dashboard-settings"]</span></span><br><span class="line"><span class="attr">  verbs:</span> <span class="string">["get",</span> <span class="string">"update"</span><span class="string">]</span></span><br><span class="line">  <span class="comment"># Allow Dashboard to get metrics from heapster.</span></span><br><span class="line"><span class="attr">- apiGroups:</span> <span class="string">[""]</span></span><br><span class="line"><span class="attr">  resources:</span> <span class="string">["services"]</span></span><br><span class="line"><span class="attr">  resourceNames:</span> <span class="string">["heapster"]</span></span><br><span class="line"><span class="attr">  verbs:</span> <span class="string">["proxy"]</span></span><br><span class="line"><span class="attr">- apiGroups:</span> <span class="string">[""]</span></span><br><span class="line"><span class="attr">  resources:</span> <span class="string">["services/proxy"]</span></span><br><span class="line"><span class="attr">  resourceNames:</span> <span class="string">["heapster",</span> <span class="string">"http:heapster:"</span><span class="string">,</span> <span class="string">"https:heapster:"</span><span class="string">]</span></span><br><span class="line"><span class="attr">  verbs:</span> <span class="string">["get"]</span></span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">RoleBinding</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard-minimal</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line"><span class="attr">  apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="attr">  kind:</span> <span class="string">Role</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard-minimal</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line"><span class="attr">- kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># ------------------- Dashboard Deployment ------------------- #</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># apiVersion: extensions/v1beta1</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    k8s-app:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  progressDeadlineSeconds:</span> <span class="number">600</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">  revisionHistoryLimit:</span> <span class="number">10</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      k8s-app:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  strategy:</span></span><br><span class="line"><span class="attr">    rollingUpdate:</span></span><br><span class="line"><span class="attr">      maxSurge:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line"><span class="attr">      maxUnavailable:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line"><span class="attr">    type:</span> <span class="string">RollingUpdate</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      creationTimestamp:</span> <span class="literal">null</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        k8s-app:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - args:</span></span><br><span class="line"><span class="comment">#        - --auto-generate-certificates</span></span><br><span class="line"><span class="comment"># 通过自己的证书来访问k8s dashboard 要注释掉 --auto-generate-certificates 并增加 --auto-generate-certificates --tls-cert-file=dashboard.pem</span></span><br><span class="line"><span class="bullet">        -</span> <span class="bullet">--tls-key-file=dashboard.key</span></span><br><span class="line"><span class="bullet">        -</span> <span class="bullet">--tls-cert-file=dashboard.pem</span></span><br><span class="line"><span class="bullet">        -</span> <span class="bullet">--authentication-mode=token</span></span><br><span class="line"><span class="bullet">        -</span> <span class="bullet">--token-ttl=900</span></span><br><span class="line"><span class="attr">        image:</span> <span class="string">gcr.azk8s.cn/google-containers/kubernetes-dashboard-amd64:v1.10.1</span></span><br><span class="line"><span class="attr">        imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line"><span class="attr">        livenessProbe:</span></span><br><span class="line"><span class="attr">          failureThreshold:</span> <span class="number">3</span></span><br><span class="line"><span class="attr">          httpGet:</span></span><br><span class="line"><span class="attr">            path:</span> <span class="string">/</span></span><br><span class="line"><span class="attr">            port:</span> <span class="number">8443</span></span><br><span class="line"><span class="attr">            scheme:</span> <span class="string">HTTPS</span></span><br><span class="line"><span class="attr">          initialDelaySeconds:</span> <span class="number">30</span></span><br><span class="line"><span class="attr">          periodSeconds:</span> <span class="number">10</span></span><br><span class="line"><span class="attr">          successThreshold:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">          timeoutSeconds:</span> <span class="number">30</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">        ports:</span></span><br><span class="line"><span class="attr">        - containerPort:</span> <span class="number">8443</span></span><br><span class="line"><span class="attr">          protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">        resources:</span></span><br><span class="line"><span class="attr">          limits:</span></span><br><span class="line"><span class="attr">            cpu:</span> <span class="number">100</span><span class="string">m</span></span><br><span class="line"><span class="attr">            memory:</span> <span class="number">256</span><span class="string">M</span></span><br><span class="line"><span class="attr">          requests:</span></span><br><span class="line"><span class="attr">            cpu:</span> <span class="number">50</span><span class="string">m</span></span><br><span class="line"><span class="attr">            memory:</span> <span class="number">64</span><span class="string">M</span></span><br><span class="line"><span class="attr">        terminationMessagePath:</span> <span class="string">/dev/termination-log</span></span><br><span class="line"><span class="attr">        terminationMessagePolicy:</span> <span class="string">File</span></span><br><span class="line"><span class="attr">        volumeMounts:</span></span><br><span class="line"><span class="attr">        - mountPath:</span> <span class="string">/certs</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">kubernetes-dashboard-certs</span></span><br><span class="line"><span class="attr">        - mountPath:</span> <span class="string">/tmp</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">tmp-volume</span></span><br><span class="line"><span class="attr">      dnsPolicy:</span> <span class="string">ClusterFirst</span></span><br><span class="line"><span class="attr">      priorityClassName:</span> <span class="string">system-cluster-critical</span></span><br><span class="line"><span class="attr">      restartPolicy:</span> <span class="string">Always</span></span><br><span class="line"><span class="attr">      schedulerName:</span> <span class="string">default-scheduler</span></span><br><span class="line"><span class="attr">      securityContext:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">      serviceAccount:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">      serviceAccountName:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">      terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line"><span class="attr">      tolerations:</span></span><br><span class="line"><span class="attr">      - effect:</span> <span class="string">NoSchedule</span></span><br><span class="line"><span class="attr">        key:</span> <span class="string">node-role.kubernetes.io/master</span></span><br><span class="line"><span class="attr">      volumes:</span></span><br><span class="line"><span class="attr">      - name:</span> <span class="string">kubernetes-dashboard-certs</span></span><br><span class="line"><span class="attr">        secret:</span></span><br><span class="line"><span class="attr">          defaultMode:</span> <span class="number">420</span></span><br><span class="line"><span class="attr">          secretName:</span> <span class="string">kubernetes-dashboard-certs</span></span><br><span class="line"><span class="attr">      - emptyDir:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">tmp-volume</span></span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    k8s-app:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line">    <span class="string">kubernetes.io/cluster-service:</span> <span class="string">"true"</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">  - port:</span> <span class="number">443</span></span><br><span class="line"><span class="attr">    protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">    targetPort:</span> <span class="number">8443</span></span><br><span class="line"><span class="attr">    nodePort:</span> <span class="number">30001</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    k8s-app:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line"><span class="attr">  type:</span> <span class="string">NodePort</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="使用-kubeconfig-或-token-进行用户身份认证"><a href="#使用-kubeconfig-或-token-进行用户身份认证" class="headerlink" title="使用 kubeconfig 或 token 进行用户身份认证"></a>使用 kubeconfig 或 token 进行用户身份认证</h4><p><a href="https://jimmysong.io/kubernetes-handbook/guide/auth-with-kubeconfig-or-token.html" target="_blank" rel="noopener">参考文档-1</a></p>
+<p><a href="http://www.mydlq.club/article/28/" target="_blank" rel="noopener">参考文档-2</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看证书</span></span><br><span class="line">kubectl get secret --namespace kube-system</span><br></pre></td></tr></table></figure>
+
+<p><strong>在原始的yaml文件中增加这一部分</strong></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 比原版增加了admin账号绑定 修改了命名空间 ---- start</span></span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">admin</span></span><br><span class="line"><span class="attr">  annotations:</span></span><br><span class="line">    <span class="string">rbac.authorization.kubernetes.io/autoupdate:</span> <span class="string">"true"</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line"><span class="attr">  kind:</span> <span class="string">ClusterRole</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">cluster-admin</span></span><br><span class="line"><span class="attr">  apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line"><span class="attr">- kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">admin</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">admin</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line">    <span class="string">kubernetes.io/cluster-service:</span> <span class="string">"true"</span></span><br><span class="line">    <span class="string">addonmanager.kubernetes.io/mode:</span> <span class="string">Reconcile</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 比原版增加了admin账号绑定 ---- end</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 获取admin的token</span></span><br><span class="line">kubectl describe secret/$(kubectl get secret -n kube-system |grep admin|awk <span class="string">'&#123;print $1&#125;'</span>) -n kube-system</span><br></pre></td></tr></table></figure>
+
+<p><strong>其他命令</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 查看role</span></span><br><span class="line">kubectl get role -n kube-system</span><br><span class="line">kubectl get rolebinding -n kube-system</span><br><span class="line">kubectl get clusterrole</span><br><span class="line">kubectl get clusterrolebinding</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看登录dashboard token</span></span><br><span class="line"></span><br><span class="line">kubectl describe secret -n kube-system kubernetes-dashboard-token</span><br><span class="line"></span><br><span class="line"><span class="comment"># 或者 获取admin的token</span></span><br><span class="line">kubectl -n kube-system describe $(kubectl -n kube-system get secret -n kube-system -o name | grep namespace) | grep token  </span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看</span></span><br><span class="line">kubectl get clusterrolebinding/login-on-dashboard-with-cluster-admin -o yaml</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建Dashboard</span></span><br><span class="line">kubectl apply -f kubernetes-dashboard.yaml</span><br><span class="line"><span class="comment"># 删除Dashboard</span></span><br><span class="line">kubectl delete -f kubernetes-dashboard.yaml</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="5-2-3-配置docker其他参数"><a href="#5-2-3-配置docker其他参数" class="headerlink" title="5.2.3. 配置docker其他参数"></a>5.2.3. 配置docker其他参数</h4><p>==docker其他参数此次部署未做调整==</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 如果启用了用docker iptables 可以调整以下参数保证网络可访问</span></span><br><span class="line">docker_iptables_enabled: <span class="string">"false"</span></span><br><span class="line"><span class="comment"># docker_iptables_enabled: "true"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Docker从1.13版本开始调整了默认的防火墙规则，禁用了iptables filter表中FOWARD链，这样会引起Kubernetes集群中跨Node的Pod无法通信，在各个Docker节点执行下面的命令：</span></span><br><span class="line">iptables -P FORWARD ACCEPT</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编辑systemctl的Docker启动文件</span></span><br><span class="line">sed -i <span class="string">"13i ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT"</span> /usr/lib/systemd/system/docker.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 可能在14行具体根据情况调整</span></span><br><span class="line">sed -i <span class="string">"14i ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT"</span> /usr/lib/systemd/system/docker.service</span><br><span class="line"></span><br><span class="line"><span class="comment"># 新建配置文件 (根据自身情况调整日志格式、http私库地址、存储驱动方式、存储选项等等)</span></span><br><span class="line">cat /etc/docker/daemon.json</span><br><span class="line">&#123;</span><br><span class="line"><span class="string">"log-driver"</span>: <span class="string">"json-file"</span>,</span><br><span class="line"><span class="string">"insecure-registries"</span>: [</span><br><span class="line">    <span class="string">"docker.local.com # 本地私库地址无https需要将域名或者ip地址添加到此处"</span></span><br><span class="line">],</span><br><span class="line"><span class="string">"storage-driver"</span>: <span class="string">"overlay2"</span>,</span><br><span class="line"><span class="string">"storage-opts"</span>:[<span class="string">"overlay2.override_kernel_check=true"</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 还可通过 /etc/docker/daemon.json禁止docker自动设定防火墙</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意，可能像docker-compose需要用到iptables做为路由功能的情况，关闭的话可能会受到影响，则可采用这种方式：sed -i "13i ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT" /usr/lib/systemd/system/docker.service</span></span><br><span class="line"></span><br><span class="line">vi /etc/docker/daemon.json</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">"iptables"</span>: <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># kubespray 部署会自动配置日志大小，如果你配置了"log-opts"部分就要去掉, 不然无法启动docker会报错 (出现两个参数冲突)</span></span><br><span class="line"></span><br><span class="line">kubespray安装docker的配置文件目录</span><br><span class="line"></span><br><span class="line">/etc/systemd/system/docker.service.d</span><br><span class="line"></span><br><span class="line">root@kfpt-c1-master1:~<span class="comment"># ll /etc/systemd/system/docker.service.d/</span></span><br><span class="line">total 8</span><br><span class="line">-rw-r--r-- 1 root root 245 Oct  8 11:07 docker-dns.conf</span><br><span class="line">-rw-r--r-- 1 root root 215 Oct  8 11:07 docker-options.conf</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">===如果配置了 /etc/docker/daemon.json 与其参数有冲突则会报错===</span><br><span class="line"></span><br><span class="line"><span class="string">"unable to configure the Docker daemon with file /etc/docker/daemon.json: the following directives are specified both as a flag"</span></span><br><span class="line"></span><br><span class="line">    <span class="string">"log-opts"</span>: &#123;</span><br><span class="line">    <span class="string">"max-size"</span>: <span class="string">"100m"</span>,</span><br><span class="line">    <span class="string">"max-file"</span>: <span class="string">"5"</span></span><br><span class="line">     &#125;,</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-证书过期时间检查"><a href="#6-证书过期时间检查" class="headerlink" title="6. 证书过期时间检查"></a>6. 证书过期时间检查</h2><p>检查证书过期时间</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># For kubeadm provisioned clusters</span></span><br><span class="line">kubeadm --config /etc/kubernetes/kubeadm-config.yaml alpha certs check-expiration</span><br><span class="line"></span><br><span class="line"><span class="comment"># For all clusters</span></span><br><span class="line">openssl x509 -noout -dates -<span class="keyword">in</span> /etc/kubernetes/pki/apiserver-kubelet-client.crt</span><br></pre></td></tr></table></figure>
+
+<p>证书轮换请<a href="https://feisky.gitbooks.io/kubernetes/practice/certificate-rotation.html" target="_blank" rel="noopener">查看链接</a></p>
+<h2 id="7-kubespray使用命令说明"><a href="#7-kubespray使用命令说明" class="headerlink" title="7. kubespray使用命令说明"></a>7. kubespray使用命令说明</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 集群部署或更新配置</span></span><br><span class="line">ansible-playbook -i inventory/kfpt-cluster/inventory.ini cluster.yml -b -v</span><br><span class="line"></span><br><span class="line"><span class="comment"># 如果需要扩容node节点，则修改inventory.ini 文件，增加新增的机器信息 (-k, --ask-pass 询问密码, -b 提升权限)。然后执行下面的命令</span></span><br><span class="line">ansible-playbook -i inventory/kfpt-cluster/inventory.ini  scale.yml -b -v -k</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将inventory.ini文件中的master和etcd的机器增加到多台，执行部署命令</span></span><br><span class="line">ansible-playbook -i inventory/kfpt-cluster/inventory.ini  cluster.yml -b -vvv</span><br><span class="line"></span><br><span class="line"><span class="comment"># 刪除节点，如果不指定节点就是刪除整个集群</span></span><br><span class="line">ansible-playbook -i inventory/kfpt-cluster/inventory.ini  remove-node.yml -b -v</span><br><span class="line"></span><br><span class="line"><span class="comment"># 如果需要卸载，可以执行以下命令</span></span><br><span class="line">ansible-playbook -i inventory/kfpt-cluster/inventory.ini reset.yml -b –vvv</span><br><span class="line"></span><br><span class="line"><span class="comment"># 升级K8s集群，选择对应的k8s版本信息，执行升级命令。涉及文件为upgrade-cluster.yml</span></span><br><span class="line">ansible-playbook upgrade-cluster.yml -b -i inventory/kfpt-cluster/inventory.ini -e kube_version=vX.XX.XX -vvv</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看ipvs</span></span><br><span class="line">ipvsadm -L -n</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-kubectl-top支持"><a href="#8-kubectl-top支持" class="headerlink" title="8. kubectl top支持"></a>8. kubectl top支持</h2><p>默认安装好的k8s集群不支持kubectl top查看占用资源</p>
+<p>==推荐方案一：原因metrics-server长期更新，heapster + influxdb k8s已不再维护==</p>
+<p>方案一：<br><a href="https://github.com/kubernetes-incubator/metrics-server" target="_blank" rel="noopener">metrics-server</a><br>因k8s从 v1.8 开始，资源使用情况的度量（如容器的 CPU 和内存使用）可以通过 Metrics API 获取。注意</p>
+<ul>
+<li>Metrics API 只可以查询当前的度量数据，并不保存历史数据</li>
+<li>Metrics API URI 为 /apis/metrics.k8s.io/，在 k8s.io/metrics 维护</li>
+<li>必须部署 metrics-server 才能使用该 API，metrics-server 通过调用 Kubelet Summary API 获取数据</li>
+</ul>
+<p>安装注意：<br>可通过github上的yaml文件进行安装<br>需要修改镜像和增加启动命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> deploy/1.8+/</span><br><span class="line">$ diff metrics-server-deployment.yaml metrics-server-deployment.yaml.default</span><br><span class="line">32,33c32</span><br><span class="line">&lt;         <span class="comment">#image: k8s.gcr.io/metrics-server-amd64:v0.3.5</span></span><br><span class="line">&lt;         image: gcr.azk8s.cn/google-containers/metrics-server-amd64:v0.3.5</span><br><span class="line">---</span><br><span class="line">&gt;         image: k8s.gcr.io/metrics-server-amd64:v0.3.5</span><br><span class="line">35,38d33</span><br><span class="line">&lt;         <span class="built_in">command</span>:</span><br><span class="line">&lt;         - /metrics-server</span><br><span class="line">&lt;         - --kubelet-insecure-tls</span><br><span class="line">&lt;         - --kubelet-preferred-address-types=InternalDNS,InternalIP,ExternalDNS,ExternalIP,Hostname</span><br></pre></td></tr></table></figure>
+
+<p>方案二：<br><a href="https://github.com/kubernetes-retired/heapster" target="_blank" rel="noopener">heapster + influxdb</a></p>
+<p>附 heapster + influxdb yaml文件</p>
+<details>
+<summary>展开查看 heapster.yaml 文件</summary>
+<pre><code>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: heapster
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heapster
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: heapster
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: heapster
+    spec:
+      serviceAccountName: heapster
+      containers:
+      - name: heapster
+        #image: k8s.gcr.io/google-containers/heapster-amd64:v1.5.4
+        image: gcr.azk8s.cn/google-containers/heapster-amd64:v1.5.4
+        # image: registry-vpc.cn-shenzhen.aliyuncs.com/google-containers/heapster-amd64:v1.5.4
+        imagePullPolicy: IfNotPresent
+        command:
+        - "/heapster"
+        # 配置说明请查阅https://github.com/kubernetes-retired/heapster/blob/master/docs/source-configuration.md
+        - "--source=kubernetes:https://kubernetes.default?kubeletPort=10250&kubeletHttps=true&insecure=true"
+        - "--sink=influxdb:http://monitoring-influxdb.kube-system.svc:8086"
+
+<hr>
+<p>apiVersion: v1<br>kind: Service<br>metadata:<br>  labels:<br>    task: monitoring<br>    # For use as a Cluster add-on (<a href="https://github.com/kubernetes/kubernetes/tree/master/cluster/addons" target="_blank" rel="noopener">https://github.com/kubernetes/kubernetes/tree/master/cluster/addons</a>)<br>    # If you are NOT using this as an addon, you should comment out this line.<br>    kubernetes.io/cluster-service: ‘true’<br>    kubernetes.io/name: Heapster<br>  name: heapster<br>  namespace: kube-system<br>spec:<br>  ports:</p>
+<ul>
+<li>port: 80<br>targetPort: 8082<br>selector:<br>k8s-app: heapster</li>
+</ul>
+<hr>
+<p>apiVersion: rbac.authorization.k8s.io/v1<br>kind: RoleBinding<br>metadata:<br>  name: heapster<br>  namespace: kube-system<br>roleRef:<br>  apiGroup: rbac.authorization.k8s.io<br>  kind: Role<br>  name: heapster<br>subjects:</p>
+<ul>
+<li>kind: ServiceAccount<br>name: heapster<br>namespace: kube-system</li>
+</ul>
+<hr>
+<p>kind: ClusterRoleBinding<br>apiVersion: rbac.authorization.k8s.io/v1beta1<br>metadata:<br>  name: heapster<br>subjects:</p>
+<ul>
+<li>kind: ServiceAccount<br>name: heapster<br>namespace: kube-system<br>roleRef:<br>kind: ClusterRole<br>name: cluster-admin<br>apiGroup: rbac.authorization.k8s.io</li>
+</ul>
+<p></code></pre></p>
+</details>
+
+<details>
+  <summary>展开查看 influxdb.yaml 文件</summary>
+  <pre><code>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-influxdb
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: influxdb
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: influxdb
+    spec:
+      containers:
+      - name: influxdb
+        #image: k8s.gcr.io/google-containers/heapster-influxdb-amd64:v1.5.2
+        image: gcr.azk8s.cn/google-containers/heapster-influxdb-amd64:v1.5.2
+        # image: registry-vpc.cn-shenzhen.aliyuncs.com/google-containers/heapster-influxdb-amd64:v1.5.2
+        volumeMounts:
+        - mountPath: /data
+          name: influxdb-storage
+      volumes:
+      - name: influxdb-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: monitoring-influxdb
+  name: monitoring-influxdb
+  namespace: kube-system
+spec:
+  ports:
+  - port: 8086
+    targetPort: 8086
+  selector:
+    k8s-app: influxdb
+
+<p>  </code></pre></p>
+</details>
+
+<h2 id="9-对kubespray文件修改了以下文件"><a href="#9-对kubespray文件修改了以下文件" class="headerlink" title="9. 对kubespray文件修改了以下文件"></a>9. 对kubespray文件修改了以下文件</h2><h3 id="9-1-修改文件的列表如下"><a href="#9-1-修改文件的列表如下" class="headerlink" title="9.1. 修改文件的列表如下"></a>9.1. 修改文件的列表如下</h3><p>根据自己的需求进行调整以下文件：</p>
+<p>roles/download/defaults/main.yml<br>roles/kubernetes-apps/ansible/templates/dashboard.yml.j2<br>roles/kubernetes/node/defaults/main.yml</p>
+<h3 id="9-2-新增的配置文件夹"><a href="#9-2-新增的配置文件夹" class="headerlink" title="9.2. 新增的配置文件夹"></a>9.2. 新增的配置文件夹</h3><p>inventory/kfpt-cluster</p>
+<p>新增文件夹后根据自己的需求进行调整以下文件：</p>
+<p>inventory/kfpt-cluster/inventory.ini<br>inventory/kfpt-cluster/group_vars/all/docker.yml<br>inventory/kfpt-cluster/group_vars/k8s-cluster/k8s-cluster.yml<br>inventory/kfpt-cluster/group_vars/k8s-cluster/addons.yml</p>
+<h2 id="10-kubespray部署高可用原理"><a href="#10-kubespray部署高可用原理" class="headerlink" title="10. kubespray部署高可用原理"></a>10. kubespray部署高可用原理</h2><p>所有node节点都部署了nginx，在各自node节点上代理了三个master节点api地址。然后kubelet 直接访问节点本机的代理地址实现高可用。</p>
+<h2 id="11-遇到错误问题"><a href="#11-遇到错误问题" class="headerlink" title="11. 遇到错误问题"></a>11. 遇到错误问题</h2><ol>
+<li>debian10部署时遇到问题</li>
+</ol>
+<p>本机负载均衡apiserver地址后master节点有时候通有时候不能通，node节点完全无法请求的问题，master和node都可以ping通，但请求就不一定通。</p>
+<p>curl -k <a href="https://10.253.0.1" target="_blank" rel="noopener">https://10.253.0.1</a> 三次只有一次请求不到。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ipvsadm -L -n</span><br><span class="line"></span><br><span class="line">TCP  10.253.0.1:443 rr</span><br><span class="line">  -&gt; 10.1.20.81:6443              Masq    1      0          0         </span><br><span class="line">  -&gt; 10.1.20.82:6443              Masq    1      0          0         </span><br><span class="line">  -&gt; 10.1.20.83:6443              Masq    1      1          0</span><br></pre></td></tr></table></figure>
+
+<p>在查找原因过程中，发现组件kube-proxy也报错了</p>
+<p>E1008 02:53:00.722967       1 proxier.go:1233] Failed to execute iptables-restore: exit status 2 (iptables-restore v1.6.0: Couldn’t load target `KUBE-MARK-DROP’:No such file or directory</p>
+<p>Error occurred at line: 15<br>Try `iptables-restore -h’ or ‘iptables-restore –help’ for more information.</p>
+<p>==原因：可能是iptables模式未设置成 legacy 模式==</p>
+<h2 id="12-其他"><a href="#12-其他" class="headerlink" title="12. 其他"></a>12. 其他</h2><ol>
+<li>K8s新版本中，针对无状态类服务推荐使用Deployment，有状态类服务则建议使用Statefulset。RC和RS已不支持目前K8s的诸多新特性了。</li>
+<li>K8s从1.11版本起便废弃了Heapster监控组件，取而代之的是metrics-server 和 custom metrics API，后面将陆续完善包括Prometheus+Grafana监控，Kibana+Fluentd日志管理，cephfs-provisioner存储（可能需要重新build kube-controller-manager装上rbd相关的包才能使用Ceph RBD StorageClass），traefik ingress等服务。</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/jetinzhang/jetinzhang.github.io/master/about/images/WeChatQR.jpg',
+  alipayImage: 'https://raw.githubusercontent.com/jetinzhang/jetinzhang.github.io/master/about/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>本文作者:  </strong>Jetinzhang</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>本文链接:  </strong>
+          <a href="/2019/10/29/Kubespray自动化部署Kubernetes v1.16.0/" target="_blank" title="Kubespray自动化部署Kubernetes 1.16.0">https://jetinzhang.github.io/2019/10/29/Kubespray自动化部署Kubernetes v1.16.0/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>版权声明:   </strong>
+            本博客所有文章除特别声明外，均采用 <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            许可协议。转载请注明出处
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ansible/" rel="tag">ansible</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/docker/" rel="tag">docker</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/" rel="tag">kubernetes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubespray/" rel="tag">kubespray</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/10/25/Linux%20%E5%88%86%E5%8C%BAMBR%E8%B0%83%E6%95%B4%E4%B8%BAGPT%E5%B9%B6%E6%89%A9%E5%A4%A7%E5%AE%B9%E9%87%8F/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Linux 分区MBR调整为GPT，并扩大容量</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Kubespray自动化部署Kubernetes-1-16-0"><span class="nav-number">1.</span> <span class="nav-text">Kubespray自动化部署Kubernetes 1.16.0</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-参考资料"><span class="nav-number">1.1.</span> <span class="nav-text">1. 参考资料</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-安装需具备的知识"><span class="nav-number">1.2.</span> <span class="nav-text">2. 安装需具备的知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-环境说明"><span class="nav-number">1.3.</span> <span class="nav-text">3. 环境说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-docker版本要求"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1. docker版本要求</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-初始化环境"><span class="nav-number">1.4.</span> <span class="nav-text">4. 初始化环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-关闭防火墙"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1. 关闭防火墙</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-关闭虚拟内存"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2. 关闭虚拟内存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-设置debian-iptables模式"><span class="nav-number">1.4.3.</span> <span class="nav-text">4.3. 设置debian iptables模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-使用kubespray一键部署kubernetes"><span class="nav-number">1.5.</span> <span class="nav-text">5. 使用kubespray一键部署kubernetes</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-获取kubespray并进行配置"><span class="nav-number">1.5.1.</span> <span class="nav-text">5.1. 获取kubespray并进行配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-1-安装kubespray"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">5.1.1. 安装kubespray</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-2-复制一份配置文件"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">5.1.2. 复制一份配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-3-修改配置文件"><span class="nav-number">1.5.1.3.</span> <span class="nav-text">5.1.3. 修改配置文件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-1-修改服务器配置文件"><span class="nav-number">1.5.1.3.1.</span> <span class="nav-text">5.1.3.1. 修改服务器配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-2-修改全局配置文件"><span class="nav-number">1.5.1.3.2.</span> <span class="nav-text">5.1.3.2. 修改全局配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-3-修改下载配置文件"><span class="nav-number">1.5.1.3.3.</span> <span class="nav-text">5.1.3.3. 修改下载配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-4-修改k8s集群部署配置文件"><span class="nav-number">1.5.1.3.4.</span> <span class="nav-text">5.1.3.4. 修改k8s集群部署配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-5-修改k8s-node节点kubelet相关配置"><span class="nav-number">1.5.1.3.5.</span> <span class="nav-text">5.1.3.5. 修改k8s node节点kubelet相关配置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-6-修改扩展组件配置文件"><span class="nav-number">1.5.1.3.6.</span> <span class="nav-text">5.1.3.6. 修改扩展组件配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-7-修改k8s-dashboard-模板文件"><span class="nav-number">1.5.1.3.7.</span> <span class="nav-text">5.1.3.7. 修改k8s dashboard 模板文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-8-修改docker参数"><span class="nav-number">1.5.1.3.8.</span> <span class="nav-text">5.1.3.8. 修改docker参数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-3-9-k8s虚拟内存检查是否启用（建议禁用虚拟内存）"><span class="nav-number">1.5.1.3.9.</span> <span class="nav-text">5.1.3.9. k8s虚拟内存检查是否启用（建议禁用虚拟内存）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-开始安装kubernetes"><span class="nav-number">1.5.2.</span> <span class="nav-text">5.2. 开始安装kubernetes</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-1-查看k8s集群状态"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">5.2.1. 查看k8s集群状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-2-测试应用部署"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">5.2.2. 测试应用部署</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dashboard-https证书访问"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">dashboard https证书访问</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用-kubeconfig-或-token-进行用户身份认证"><span class="nav-number">1.5.2.4.</span> <span class="nav-text">使用 kubeconfig 或 token 进行用户身份认证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-3-配置docker其他参数"><span class="nav-number">1.5.2.5.</span> <span class="nav-text">5.2.3. 配置docker其他参数</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-证书过期时间检查"><span class="nav-number">1.6.</span> <span class="nav-text">6. 证书过期时间检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-kubespray使用命令说明"><span class="nav-number">1.7.</span> <span class="nav-text">7. kubespray使用命令说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-kubectl-top支持"><span class="nav-number">1.8.</span> <span class="nav-text">8. kubectl top支持</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-对kubespray文件修改了以下文件"><span class="nav-number">1.9.</span> <span class="nav-text">9. 对kubespray文件修改了以下文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-修改文件的列表如下"><span class="nav-number">1.9.1.</span> <span class="nav-text">9.1. 修改文件的列表如下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-新增的配置文件夹"><span class="nav-number">1.9.2.</span> <span class="nav-text">9.2. 新增的配置文件夹</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-kubespray部署高可用原理"><span class="nav-number">1.10.</span> <span class="nav-text">10. kubespray部署高可用原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-遇到错误问题"><span class="nav-number">1.11.</span> <span class="nav-text">11. 遇到错误问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-其他"><span class="nav-number">1.12.</span> <span class="nav-text">12. 其他</span></a></li></ol></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2019 Jetinzhang Blog All Rights Reserved.</p>
+	      
+	      
+  		   	<p id="copyRightCn">Jetinzhang 保留所有权利</p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            Jetinzhang Blog
+          </div>
+          <div class="panel-body">
+            Copyright © 2019 Jetinzhang All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>
